@@ -1,0 +1,72 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          sw_vers
+          swift --version
+          python3 --version
+          uname -m
+
+      - name: Backend syntax check
+        run: python3 -m compileall -q server
+
+      - name: Backend smoke test
+        run: |
+          set -e
+          python3 server/main.py --port 8899 > /tmp/aicode.log 2>&1 &
+          SRV=$!
+          trap 'kill $SRV 2>/dev/null || true' EXIT
+          for i in $(seq 1 60); do
+            if curl -fsS --max-time 2 http://127.0.0.1:8899/api/health -o /tmp/health.json; then break; fi
+            sleep 0.25
+          done
+          cat /tmp/health.json
+          python3 -c "import json; d=json.load(open('/tmp/health.json')); assert d.get('ok') is True, d; print('health ok')"
+          curl -fsS --max-time 2 http://127.0.0.1:8899/api/state -o /tmp/state.json
+          python3 -c "import json; d=json.load(open('/tmp/state.json')); assert 'config' in d or 'providers' in d, list(d)[:5]; print('state ok')"
+          tail -n 20 /tmp/aicode.log
+
+      - name: Build AiCode.app
+        run: bash mac/build.sh
+
+      - name: Package
+        run: |
+          cd build
+          ARCH="$(uname -m)"
+          ditto -c -k --keepParent AiCode.app "AiCode-macos-${ARCH}.zip"
+          hdiutil create -volname AiCode -srcfolder AiCode.app -ov -format UDZO "AiCode-macos-${ARCH}.dmg"
+          ls -lh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AiCode-macos
+          path: |
+            build/AiCode-macos-*.zip
+            build/AiCode-macos-*.dmg
+          if-no-files-found: error
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/AiCode-macos-*.zip
+            build/AiCode-macos-*.dmg

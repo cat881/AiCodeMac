@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AiCode</title>
+<link rel="stylesheet" href="/vendor/hljs-dark.css" id="hljs-theme">
+<link rel="stylesheet" href="/vendor/codemirror.css">
+<link rel="stylesheet" href="/vendor/xterm.css">
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8A2.5 2.5 0 0 1 17.5 16H9l-5 4v-4.2A2.5 2.5 0 0 1 4 13.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+  <symbol id="i-files" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+  <symbol id="i-git" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.4" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="6" cy="18" r="2.4" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="9" r="2.4" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M6 8.4v7.2M8.4 6h3.2a4 4 0 0 1 4 4v-.9" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+  <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M7 9l3 3-3 3M12.5 15H17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-stats" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M18.5 5.5l-1.7 1.7M7.2 16.8l-1.7 1.7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12l16-8-6 8 6 8z" fill="currentColor"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M8 10l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="M9 7l-5 5 5 5M15 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-robot" viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="9.5" cy="13" r="1.4" fill="currentColor"/><circle cx="14.5" cy="13" r="1.4" fill="currentColor"/><path d="M12 3v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+</svg>
+
+<div id="app" class="app">
+  <aside class="rail">
+    <div class="logo" title="AiCode"><svg><use href="#i-code"/></svg></div>
+    <nav id="rail-nav">
+      <button class="rail-btn active" data-view="chat" title="会话"><svg><use href="#i-chat"/></svg></button>
+      <button class="rail-btn" data-view="files" title="文件"><svg><use href="#i-files"/></svg></button>
+      <button class="rail-btn" data-view="git" title="Git"><svg><use href="#i-git"/></svg></button>
+      <button class="rail-btn" data-view="terminal" title="终端"><svg><use href="#i-terminal"/></svg></button>
+      <button class="rail-btn" data-view="stats" title="统计"><svg><use href="#i-stats"/></svg></button>
+    </nav>
+    <div class="rail-bottom">
+      <button class="rail-btn" id="btn-theme" title="切换主题"><span id="theme-glyph">◐</span></button>
+      <button class="rail-btn" id="btn-settings" title="设置"><svg><use href="#i-settings"/></svg></button>
+    </div>
+  </aside>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-head">
+      <div class="brand">AiCode <span class="ver">macOS</span></div>
+      <button class="icon-btn" id="btn-new-session" title="新建会话"><svg><use href="#i-plus"/></svg></button>
+    </div>
+    <div class="session-search">
+      <input id="session-search" placeholder="搜索会话…" autocomplete="off">
+    </div>
+    <div class="session-list" id="session-list"></div>
+    <div class="sidebar-foot">
+      <button class="workspace-chip" id="workspace-chip" title="切换工作区">
+        <svg><use href="#i-folder"/></svg>
+        <span id="workspace-name">选择工作区</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn only-narrow" id="btn-sidebar" title="会话列表">☰</button>
+        <div class="view-title" id="view-title">会话</div>
+      </div>
+      <div class="topbar-right">
+        <div class="segmented" id="mode-select" title="运行模式">
+          <button data-mode="build">BUILD</button>
+          <button data-mode="plan">PLAN</button>
+          <button data-mode="auto">AUTO</button>
+        </div>
+        <select id="model-select" class="model-select" title="模型"></select>
+        <button class="icon-btn" id="btn-inspector" title="代码面板"><svg><use href="#i-code"/></svg></button>
+      </div>
+    </header>
+
+    <section class="view active" id="view-chat">
+      <div class="chat-wrap">
+        <div class="messages" id="messages"></div>
+        <div class="todo-strip" id="todo-strip"></div>
+        <div class="composer">
+          <div class="composer-box">
+            <textarea id="input" rows="1" placeholder="描述任务，或粘贴图片…（Enter 发送，Shift+Enter 换行）"></textarea>
+            <div class="composer-actions">
+              <div class="composer-left">
+                <button class="ghost-btn" id="btn-attach" title="附加图片">＋</button>
+                <span class="hint" id="composer-hint"></span>
+              </div>
+              <button class="send-btn" id="btn-send" title="发送"><svg><use href="#i-send"/></svg></button>
+              <button class="send-btn stop hidden" id="btn-stop" title="停止"><svg><use href="#i-stop"/></svg></button>
+            </div>
+          </div>
+          <div class="composer-foot">AiCode 可能会修改工作区文件；写操作会按模式请求授权，并生成可回滚的检查点。</div>
+          <input type="file" id="file-input" accept="image/*" multiple hidden>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="view-files">
+      <div class="split">
+        <div class="pane-tree">
+          <div class="pane-head">
+            <span>文件</span>
+            <div class="pane-actions">
+              <button class="icon-btn" id="btn-tree-refresh" title="刷新"><svg><use href="#i-refresh"/></svg></button>
+            </div>
+          </div>
+          <div class="file-tree" id="file-tree"></div>
+        </div>
+        <div class="pane-editor">
+          <div class="editor-tabs" id="editor-tabs"></div>
+          <div class="editor-toolbar hidden" id="editor-toolbar">
+            <span class="editor-path" id="editor-path"></span>
+            <div class="pane-actions">
+              <button class="ghost-btn" id="btn-preview">预览</button>
+              <button class="ghost-btn" id="btn-save">保存 ⌘S</button>
+            </div>
+          </div>
+          <div class="editor-host" id="editor-host">
+            <div class="empty-state">
+              <div class="empty-icon">⌘</div>
+              <div>从左侧选择一个文件开始编辑</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="view-git">
+      <div class="git-layout" id="git-panel"></div>
+    </section>
+
+    <section class="view" id="view-terminal">
+      <div class="terminal-wrap">
+        <div class="term-tabs" id="term-tabs"></div>
+        <div class="term-host" id="term-host">
+          <div class="empty-state"><div class="empty-icon">$_</div><div>还没有终端，点击右上角新建</div></div>
+        </div>
+        <button class="term-new" id="btn-new-term" title="新建终端"><svg><use href="#i-plus"/></svg></button>
+      </div>
+    </section>
+
+    <section class="view" id="view-stats">
+      <div class="stats-wrap" id="stats-panel"></div>
+    </section>
+  </main>
+
+  <aside class="inspector hidden" id="inspector">
+    <div class="inspector-head">
+      <div class="segmented small" id="inspector-tabs">
+        <button data-tab="files" class="active">代码</button>
+        <button data-tab="terminal">终端</button>
+      </div>
+      <button class="icon-btn" id="btn-close-inspector"><svg><use href="#i-close"/></svg></button>
+    </div>
+    <div class="inspector-body" id="inspector-body"></div>
+  </aside>
+</div>
+
+<div class="modal-backdrop hidden" id="settings-modal">
+  <div class="modal large">
+    <div class="modal-head">
+      <div class="modal-title">设置</div>
+      <button class="icon-btn" data-close="settings-modal"><svg><use href="#i-close"/></svg></button>
+    </div>
+    <div class="modal-body settings-body" id="settings-body"></div>
+  </div>
+</div>
+
+<div class="modal-backdrop hidden" id="approval-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">需要授权</div>
+    </div>
+    <div class="modal-body" id="approval-body"></div>
+    <div class="modal-foot" id="approval-foot"></div>
+  </div>
+</div>
+
+<div class="modal-backdrop hidden" id="confirm-modal">
+  <div class="modal small">
+    <div class="modal-head"><div class="modal-title" id="confirm-title">确认</div></div>
+    <div class="modal-body" id="confirm-body"></div>
+    <div class="modal-foot">
+      <button class="ghost-btn" id="confirm-cancel">取消</button>
+      <button class="danger-btn" id="confirm-ok">确定</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script src="/vendor/xterm.js"></script>
+<script src="/vendor/addon-fit.js"></script>
+<script src="/vendor/codemirror.js"></script>
+<script src="/vendor/marked.min.js"></script>
+<script src="/vendor/purify.min.js"></script>
+<script src="/vendor/hljs.min.js"></script>
+<script src="/js/modes.js"></script>
+<script src="/js/util.js"></script>
+<script src="/js/markdown.js"></script>
+<script src="/js/editor.js"></script>
+<script src="/js/terminal.js"></script>
+<script src="/js/git.js"></script>
+<script src="/js/stats.js"></script>
+<script src="/js/settings.js"></script>
+<script src="/js/chat.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
